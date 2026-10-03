@@ -62,19 +62,19 @@ def provider_of_host(host: str) -> str | None:
 
 def normalize_host(authority: str) -> str:
     if "@" in authority:
-        raise Rejected("URL must not contain user information")
+        raise Rejected("user information is not accepted")
     match = AUTHORITY.fullmatch(authority)
     if match is None:
-        raise Rejected("URL has an invalid host")
+        raise Rejected("invalid host")
     host = match.group("host").lower()
     labels = host.split(".")
     if len(host) > MAX_HOST_LENGTH or not all(HOST_LABEL.fullmatch(label) for label in labels):
-        raise Rejected("URL has an invalid host")
+        raise Rejected("invalid host")
     port = match.group("port")
     if port is None or port == "443":
         return host
     if port.startswith("0") or not 1 <= int(port) <= 65535:
-        raise Rejected("URL has an invalid port")
+        raise Rejected("invalid port")
     return f"{host}:{port}"
 
 
@@ -123,14 +123,20 @@ def split_url(value: str) -> tuple[str, list[str]]:
     return host, parts
 
 
-def project_reference(value: str, provider: str | None) -> dict[str, object]:
+def project_reference(
+    value: str, provider: str | None, path_host: str | None
+) -> dict[str, object]:
     if "://" not in value:
+        host = normalize_host(check_text(path_host, "--host")) if path_host is not None else None
+        provider = resolve_provider(host, provider)
         return {
-            "host": None,
+            "host": host,
             "issue": None,
             "project": check_project(value.split("/"), provider),
             "provider": provider,
         }
+    if path_host is not None:
+        raise Rejected("--host applies only to a project path")
     host, parts = split_url(value)
     provider = resolve_provider(host, provider)
     if "-" in parts:
@@ -197,6 +203,7 @@ def build_parser() -> argparse.ArgumentParser:
     project = modes.add_parser("project", help="normalize a target project reference")
     project.add_argument("--ref", required=True, help="project path or HTTPS project URL")
     project.add_argument("--provider", choices=PROVIDERS, help="provider, when known")
+    project.add_argument("--host", help="host of a project path, when known")
 
     parent = modes.add_parser("parent", help="normalize a parent issue reference")
     parent.add_argument("--ref", required=True, help="#N, N, PROJECT#N, or HTTPS issue URL")
@@ -211,7 +218,7 @@ def main() -> int:
     try:
         value = check_text(args.ref, "reference")
         if args.mode == "project":
-            result = project_reference(value, args.provider)
+            result = project_reference(value, args.provider, args.host)
         else:
             target_host = normalize_host(check_text(args.host, "--host"))
             resolve_provider(target_host, args.provider)

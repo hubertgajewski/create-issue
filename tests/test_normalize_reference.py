@@ -79,6 +79,36 @@ class NormalizeReferenceTests(unittest.TestCase):
             "github",
         )
 
+    def test_host_for_a_project_path_is_validated_separately(self) -> None:
+        self.assertEqual(
+            self.accept("project", "--ref", "group/project.git", "--host", "GitLab.example.com:443"),
+            {"host": "gitlab.example.com", "issue": None, "project": "group/project.git", "provider": "gitlab"},
+        )
+        self.assertEqual(
+            self.accept("project", "--ref", "owner/repo", "--host", "code.example.com:8443")["host"],
+            "code.example.com:8443",
+        )
+
+    def test_invalid_host_for_a_project_path_is_rejected(self) -> None:
+        secret = "glpat-SECRETVALUE123"
+        cases = {
+            "gitlab.com/group": "invalid host",
+            "https://gitlab.com": "invalid host",
+            "[::1]": "invalid host",
+            "gitlab.com:0": "invalid port",
+            f"deploy:{secret}@gitlab.com": "user information",
+        }
+        for host, reason in cases.items():
+            with self.subTest(host=host.replace(secret, "SECRET")):
+                stderr = self.reject("project", "--ref", "group/project", "--host", host, reason=reason)
+                self.assertNotIn(secret, stderr)
+
+    def test_host_is_not_accepted_with_a_project_url(self) -> None:
+        self.reject(
+            "project", "--ref", "https://gitlab.com/group/project", "--host", "gitlab.com",
+            reason="--host",
+        )
+
     def test_explicit_provider_resolves_a_neutral_host(self) -> None:
         self.assertEqual(
             self.accept(

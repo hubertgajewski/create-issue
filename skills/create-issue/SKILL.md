@@ -35,7 +35,7 @@ Apply this precedence, first match winning: the user's explicit request; reposit
 ## Resolve the Target Repository
 
 1. Select the target project, first match winning:
-   - a project the user names explicitly, as a project path such as `OWNER/REPO` or `GROUP/SUBGROUP/PROJECT` or as a project URL, normalized in step 1 of Load Project Policy. A project path names no host: use the host of the one remote whose project equals it, otherwise ask the user for the host. With the helper, normalize `https://HOST/PROJECT` as a project URL; without it, check the project path and the host separately against the grammar's common rules;
+   - a project the user names explicitly, as a project path such as `OWNER/REPO` or `GROUP/SUBGROUP/PROJECT` or as a project URL, normalized in step 1 of Load Project Policy. A project path names no host: use the host of the one remote whose project equals it, otherwise ask the user for the host. Validate that host separately as described in the grammar, keeping the normalized project path unchanged; never join the two into a URL;
    - the project of the remote named by trusted configuration `remote`, which must exist and whose host must identify a forge, otherwise the run stops;
    - the project of `origin` when its host identifies a forge;
    - the project of the only remote whose host identifies a forge.

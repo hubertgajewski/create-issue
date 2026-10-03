@@ -27,7 +27,7 @@ Every URL must satisfy all of these:
 
 A target project is one of:
 
-- a **project path**, such as `OWNER/REPO` or `GROUP/SUBGROUP/PROJECT`. It names no host, so the result's `host` is `null`;
+- a **project path**, such as `OWNER/REPO` or `GROUP/SUBGROUP/PROJECT`. It names no host, so the result's `host` is `null` unless a host is supplied separately with `--host`, which is validated by the host rule alone and never joined with the path into a URL. The path is never rewritten: `OWNER/REPO.git` keeps its `.git`;
 - a **project URL**, `https://HOST/PROJECT`. One `.git` suffix on the last component is removed, so `https://gitlab.example.com/group/subgroup/project.git` normalizes to host `gitlab.example.com`, project `group/subgroup/project`. A path with a `-` component, such as `/-/tree/main`, points inside a project and is rejected.
 
 When the provider is still unknown, the GitHub and GitLab project path rules cannot apply yet. Normalize the project again with `--provider` once the provider is resolved, and treat a rejection then like any other.
@@ -51,11 +51,11 @@ A parent is resolved against the frozen target, whose provider, host, and projec
 ## Helper
 
 ```text
-python3 scripts/normalize_reference.py project --ref REFERENCE [--provider github|gitlab]
+python3 scripts/normalize_reference.py project --ref REFERENCE [--provider github|gitlab] [--host HOST]
 python3 scripts/normalize_reference.py parent --ref REFERENCE --provider github|gitlab --host HOST --project PROJECT
 ```
 
-Run it from the package directory, or give the script's path inside the package. Pass each value as a separate quoted argument, never through shell evaluation. In `parent` mode, `--provider`, `--host`, and `--project` are the frozen target.
+Run it from the package directory, or give the script's path inside the package. Pass each value as a separate quoted argument, never through shell evaluation. In `project` mode, `--host` is accepted only with a project path and is rejected with a project URL. In `parent` mode, `--provider`, `--host`, and `--project` are the frozen target.
 
 On success the helper exits `0` and prints one JSON object:
 
@@ -64,7 +64,7 @@ On success the helper exits `0` and prints one JSON object:
 ```
 
 - `provider` is `github`, `gitlab`, or `null` when no host or `--provider` identifies it.
-- `host` is the normalized host, or `null` for a project path.
+- `host` is the normalized host, or `null` for a project path given without `--host`.
 - `project` is the normalized project path.
 - `issue` is the issue number in `parent` mode and `null` in `project` mode.
 
@@ -74,7 +74,7 @@ Treat any nonzero exit, missing output, or malformed JSON as a rejection.
 
 ## Without the helper
 
-When Python 3.10 or later is unavailable, apply the common rules in memory to project paths, `N`, `#N`, and `PROJECT#N` only. Do not parse a URL by hand; ask the user to restate it as a project path or `PROJECT#N`, and, for a target project that no single remote has, to name its host. Check that project path and host separately against the common rules, normalizing the host as the host rule describes; never join them into a URL to parse.
+When Python 3.10 or later is unavailable, apply the common rules in memory to project paths, `N`, `#N`, and `PROJECT#N` only. Do not parse a URL by hand; ask the user to restate it as a project path or `PROJECT#N`, and, for a target project that no single remote has, to name its host. Check that host against the host rule alone, as the helper's `--host` does, and keep the project path unchanged; never join them into a URL to parse.
 
 ## Rejections
 
