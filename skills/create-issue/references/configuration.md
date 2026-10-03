@@ -73,7 +73,7 @@ size_field = "Size"
 | --- | --- | --- | --- | --- |
 | `version` | integer | required | `1` | Schema version. Required whenever the file exists. |
 | `provider` | string | `"auto"` | `auto`, `github`, `gitlab` | Identifies the forge for a self-hosted host whose name does not. It must agree with the resolved target. |
-| `remote` | string | `"origin"` | a Git remote name | The remote whose host and project are the target when the user names none. It must exist. |
+| `remote` | string | `"origin"` | a Git remote name | The remote whose project is the target when the user names none. It must exist and its host must identify a forge. |
 | `title.prefix` | string | `"none"` | `none`, `type`, `category` | Title prefix style: none, `[<type>]`, or `[<category>]`. |
 | `title.categories` | string array | `[]` | nonempty strings without `[`, `]`, or line breaks | Categories for `prefix = "category"`. Required to be nonempty for that style. |
 | `title.max_length` | integer | `72` | `20` through `256` | Maximum length of the complete title, including any prefix. |
@@ -121,7 +121,7 @@ Never ignore, coerce, or guess an invalid value.
 ## Field behavior
 
 - **Precedence.** Apply the user's explicit request, then repository instruction files, then native issue templates, then this file, then package defaults. A lower level fills only what higher levels leave open.
-- **`provider` and `remote`.** These constrain target resolution; they never select a different repository from one the user named. A conflict with the resolved target stops the run.
+- **`provider` and `remote`.** Configuration is loaded before the target is resolved. A project the user names always wins. Otherwise a configured `remote` selects the target, which suits forks whose issues belong upstream. A configured `remote` that does not exist or whose host does not identify a forge stops the run. `provider` identifies only a self-hosted host; when it contradicts a host that identifies itself, the run stops.
 - **`labels.policy`.**
   - `existing-only` applies existing labels that fit, plus every configured label for the type that exists. A configured label that does not exist is reported as missing, and its creation is offered for separate approval.
   - `propose-new` also suggests new labels where no existing label fits. Each needs the same separate approval.
