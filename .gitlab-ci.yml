@@ -1,0 +1,34 @@
+# Rule order is load-bearing and pinned by tests/test_ci_configuration.py: a pipeline
+# started from the web UI must run even while CI_ENABLED is "false", and a branch with an
+# open merge request runs only its merge request pipeline.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_ENABLED == "false"
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+variables:
+  CI_ENABLED:
+    value: "true"
+    description: "Set the project variable to false to stop automatic pipelines. Pipelines started from Build > Pipelines > New pipeline still run."
+
+stages:
+  - test
+
+# Python 3.10 installs tomli and exercises the fallback parser; 3.14 uses tomllib. Images
+# are pinned by manifest digest; update the tag and digest together.
+test:
+  stage: test
+  image: $PYTHON_IMAGE
+  parallel:
+    matrix:
+      - PYTHON_IMAGE: python:3.10-slim@sha256:c1aaf3d03e14944a039a1647e0b3f6f34c6bee517bac6ff380215ee099c4e808
+      - PYTHON_IMAGE: python:3.14-slim@sha256:0741d101873c12ab927e6f8653feb8862b9bd58771177acb1b885b95141f91b4
+  script:
+    - python --version
+    - python -m pip install --require-hashes -r requirements-test.txt
+    - python -m unittest discover -s tests -v
