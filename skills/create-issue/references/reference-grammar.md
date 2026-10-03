@@ -74,7 +74,7 @@ Treat any nonzero exit, missing output, or malformed JSON as a rejection.
 
 ## Without the helper
 
-When Python 3.10 or later is unavailable, apply the common rules in memory to project paths, `N`, `#N`, and `PROJECT#N` only. Do not parse a URL by hand; ask the user to restate it as a project path or `PROJECT#N`, and, for a target project that no single remote has, to name its host, which must satisfy the host rule.
+When Python 3.10 or later is unavailable, apply the common rules in memory to project paths, `N`, `#N`, and `PROJECT#N` only. Do not parse a URL by hand; ask the user to restate it as a project path or `PROJECT#N`, and, for a target project that no single remote has, to name its host. Check that project path and host separately against the common rules, normalizing the host as the host rule describes; never join them into a URL to parse.
 
 ## Rejections
 

@@ -35,7 +35,7 @@ Apply this precedence, first match winning: the user's explicit request; reposit
 ## Resolve the Target Repository
 
 1. Select the target project, first match winning:
-   - a project the user names explicitly, as a project path such as `OWNER/REPO` or `GROUP/SUBGROUP/PROJECT` or as a project URL, normalized in step 1 of Load Project Policy. A project path names no host: use the host of the one remote whose project equals it, otherwise ask the user for the host and normalize `https://HOST/PROJECT` as a project URL;
+   - a project the user names explicitly, as a project path such as `OWNER/REPO` or `GROUP/SUBGROUP/PROJECT` or as a project URL, normalized in step 1 of Load Project Policy. A project path names no host: use the host of the one remote whose project equals it, otherwise ask the user for the host. With the helper, normalize `https://HOST/PROJECT` as a project URL; without it, check the project path and the host separately against the grammar's common rules;
    - the project of the remote named by trusted configuration `remote`, which must exist and whose host must identify a forge, otherwise the run stops;
    - the project of `origin` when its host identifies a forge;
    - the project of the only remote whose host identifies a forge.
@@ -153,7 +153,7 @@ Show, in this order:
 5. Labels, marking each as existing or to-be-created.
 6. Milestone, marked existing or to-be-created.
 7. Estimate or size, and where it will be written.
-8. Parent as normalized `PROJECT#N`, and linking method.
+8. Parent and linking method: an issue parent as normalized `PROJECT#N`, a GitLab group epic by its epic reference or URL.
 9. Duplicate candidates and quality notes.
 
 Then ask for approval and wait. Treat requested changes as a new draft.
