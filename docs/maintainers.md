@@ -32,10 +32,18 @@ pipelines, for example while CI minutes are exhausted:
 
 1. Go to **Settings > CI/CD > Variables** and add a project variable `CI_ENABLED` with the
    value `false`. Only the exact lowercase string `false` disables pipelines.
+   - Select **Visible**. The default, **Masked**, requires at least eight characters, so
+     `false` cannot be saved with it.
+   - Leave **Protect variable** cleared. A protected variable reaches only pipelines on
+     protected branches, so pushes to other branches would still run pipelines.
 2. To restore automatic pipelines, delete the project variable.
 
-While pipelines are disabled, a merge request gets no pipeline and the merge gate blocks it.
-Start a pipeline for its source branch from **Build > Pipelines > New pipeline**.
+While pipelines are disabled, a merge request gets no new pipeline, so the merge gate blocks
+it. A pipeline started from **Build > Pipelines > New pipeline** is a branch pipeline and
+does not unblock the merge, because the merge check uses the merge request pipeline. To
+unblock a merge request, retry the failed jobs of its merge request pipeline when that
+pipeline ran on the latest commit. Otherwise, delete the project variable and select
+**Run pipeline** on the merge request's **Pipelines** tab.
 
 ### Updating a Python image
 
