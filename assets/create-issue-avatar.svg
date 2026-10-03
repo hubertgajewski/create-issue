@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Create issue</title>
+  <desc id="desc">A blue issue symbol with a turquoise diamond containing a plus, on a dark rounded tile.</desc>
+  <rect x="4" y="4" width="184" height="184" rx="40" fill="#0B1220" stroke="#1E293B" stroke-width="8"/>
+  <circle cx="80" cy="80" r="42" stroke="#4F6B90" stroke-width="12"/>
+  <path d="M80 59V82" stroke="#93C5FD" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="80" cy="99" r="6" fill="#93C5FD"/>
+  <path d="M134 98L170 134L134 170L98 134Z" fill="#2DD4BF" stroke="#0B1220" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M120 134H148M134 120V148" stroke="#0B1220" stroke-width="8" stroke-linecap="round"/>
+</svg>
