@@ -82,7 +82,7 @@ Search open and closed issues in the target project with two or three distinctiv
 
 ## Draft the Issue
 
-Follow the selected template's section order exactly. Include every required section, and omit an optional section entirely when there is nothing substantive to put in it. Write in the repository's language and tone.
+Follow the selected template's section order exactly. Include every required section, and omit an optional section entirely when there is nothing substantive to put in it. The one exception is a GitHub issue form, which keeps every field heading as described in [references/forges.md](references/forges.md). Write in the repository's language and tone.
 
 **Title**
 

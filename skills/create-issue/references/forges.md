@@ -39,7 +39,7 @@ On GitHub, a bare `#N` in issue body prose auto-links to issue or pull request `
 - `.github/ISSUE_TEMPLATE/*.md`: Markdown templates whose YAML front matter may declare `name`, `about`, `title`, `labels`, and `assignees`. The body below the front matter is the structure.
 - `.github/ISSUE_TEMPLATE/*.yml` and `*.yaml`: issue forms. `config.yml` is chooser configuration, not a template. Render a form the way GitHub does:
   - Visit `body` elements in order and skip `markdown` elements.
-  - For `input`, `textarea`, and `dropdown`, write `### <attributes.label>` followed by the value. An element with `validations.required: true` is a required section; an empty optional one is written as `_No response_`.
+  - For `input`, `textarea`, and `dropdown`, write `### <attributes.label>` followed by the value. An element with `validations.required: true` is a required section. Keep the heading of an empty optional element and write `_No response_` under it, as GitHub does; automation that parses form-submitted issues relies on every heading being present. This overrides the rule in `SKILL.md` to omit empty optional sections.
   - For `checkboxes`, write `### <attributes.label>` followed by one `- [x]` or `- [ ]` line per option.
 - `.github/ISSUE_TEMPLATE.md`, `ISSUE_TEMPLATE.md`, or `docs/ISSUE_TEMPLATE.md`: a legacy single template. It applies to every type unless the user chooses the built-in template.
 
