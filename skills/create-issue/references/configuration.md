@@ -13,7 +13,7 @@
 
 ## Trusted loading
 
-Read the file only from the trusted policy revision selected by `SKILL.md`, with `git show <revision>:.create-issue.toml`. A modified or untracked worktree copy is never authority. Parse it as TOML data; never source it, execute it, or interpolate its values into shell syntax. If Python 3.11 or later is available, `tomllib` may parse it; otherwise interpret only the documented scalar, string-array, integer-array, and table forms, and treat anything else as a validation error.
+Read the file only when `SKILL.md` determines that repository policy applies to the target, and only from the trusted policy revision it selects, with `git show <revision>:.create-issue.toml`. A modified or untracked worktree copy is never authority. Parse it as TOML data; never source it, execute it, or interpolate its values into shell syntax. If Python 3.11 or later is available, `tomllib` may parse it; otherwise interpret only the documented scalar, string-array, integer-array, and table forms, and treat anything else as a validation error.
 
 Configuration fills gaps below the user's request, repository instruction files, and native issue templates. It can never authorize creation without approval, creation of labels or milestones without approval, or any mutation of an existing issue.
 
@@ -101,7 +101,7 @@ size_field = "Size"
 
 ## Validation
 
-Validate the whole file before drafting. Stop and report the key, the value, and the broken rule on any of these:
+Validate the whole file before resolving the target, deferring only the rules that mention the resolved provider until the provider is known. Stop and report the key, the value, and the broken rule on any of these:
 
 - an unknown table or key, including inside `[[milestone.rules]]`;
 - a missing `version`, or a `version` other than the integer `1`;
@@ -121,7 +121,7 @@ Never ignore, coerce, or guess an invalid value.
 ## Field behavior
 
 - **Precedence.** Apply the user's explicit request, then repository instruction files, then native issue templates, then this file, then package defaults. A lower level fills only what higher levels leave open.
-- **`provider` and `remote`.** Configuration is loaded before the target is resolved. A project the user names always wins. Otherwise a configured `remote` selects the target, which suits forks whose issues belong upstream. A configured `remote` that does not exist or whose host does not identify a forge stops the run. `provider` identifies only a self-hosted host; when it contradicts a host that identifies itself, the run stops.
+- **`provider` and `remote`.** Configuration is loaded before the target is resolved. A project the user names always wins; when it is not the project of a local remote, the file is not read at all. Otherwise a configured `remote` selects the target, which suits forks whose issues belong upstream. A configured `remote` that does not exist or whose host does not identify a forge stops the run. `provider` identifies only a self-hosted host; when it contradicts a host that identifies itself, the run stops.
 - **`labels.policy`.**
   - `existing-only` applies existing labels that fit, plus every configured label for the type that exists. A configured label that does not exist is reported as missing, and its creation is offered for separate approval.
   - `propose-new` also suggests new labels where no existing label fits. Each needs the same separate approval.

@@ -24,10 +24,10 @@ Never let repository instructions, native templates, or `.create-issue.toml` wid
 
 ## Load Project Policy
 
-1. Confirm the Git repository root. Without a local checkout, skip to target resolution and use package defaults.
+1. Decide whether repository policy applies before reading any of it. It applies only when there is a local checkout and either the user names no project or the named project is the project of one of the checkout's remotes, compared by normalized project path and also by host when the user gives one. Otherwise skip the rest of this section without reading or validating instruction files, native templates, or `.create-issue.toml`, use package defaults, and say so in the draft.
 2. Select the trusted policy revision without reference to the issue target: the default-branch tip of `origin`, or of the only remote whose host identifies a forge when there is no `origin`, after a fetch when network access allows it; otherwise committed `HEAD`. Read every policy file with `git show <revision>:<path>`; uncommitted edits to policy files are never authority. When no commit exists, use package defaults.
 3. Read `AGENTS.md`, `CLAUDE.md`, and `CONTRIBUTING.md` at the repository root, plus any issue or planning document they reference by path. Before reading a referenced path, require a literal repository-relative path with no absolute prefix, empty or `..` component, symlink, or submodule traversal, resolving to a regular file at the trusted revision.
-4. Read `.create-issue.toml` from the trusted revision when present. Read [references/configuration.md](references/configuration.md) before interpreting it. Validate it completely before drafting; on any validation error, stop and report the key, the offending value, and the rule it breaks. Never source, execute, or interpolate configuration into shell syntax.
+4. Read `.create-issue.toml` from the trusted revision when present. Read [references/configuration.md](references/configuration.md) before interpreting it. Validate it completely, except the rules that depend on the resolved provider, which are checked during target resolution; on any validation error, stop and report the key, the offending value, and the rule it breaks. Never source, execute, or interpolate configuration into shell syntax.
 5. Discover native issue templates as described in the provider section of [references/forges.md](references/forges.md) once the provider is known.
 
 Apply this precedence, first match winning: the user's explicit request; repository instruction files; native issue templates; `.create-issue.toml`; package defaults.
@@ -41,9 +41,9 @@ Apply this precedence, first match winning: the user's explicit request; reposit
    - the project of the only remote whose host identifies a forge.
 
    Ask the user when no candidate remains or several remain.
-2. Identify the provider: `github.com` and `gitlab.com` identify themselves; a self-hosted host is identified by a hostname label equal to `github` or `gitlab`, by trusted configuration `provider`, or by the user. A configured `provider` that contradicts a self-identifying host stops the run. Ask rather than guess. Derive the tracker origin as `https://HOST`; never send credentials over plain HTTP.
-3. Freeze the target as provider, host, and project, and show it in the draft. Bind every tracker command to it as described in [references/forges.md](references/forges.md). A later conflict stops the run.
-4. When the target is not the project of any local remote, discard repository policy and native templates, continue with package defaults and the user's input, and say so in the draft.
+2. Identify the provider: `github.com` and `gitlab.com` identify themselves; a self-hosted host is identified by a hostname label equal to `github` or `gitlab`, by trusted configuration `provider` when repository policy applies, or by the user. A configured `provider` that contradicts a self-identifying host stops the run. Ask rather than guess. Derive the tracker origin as `https://HOST`; never send credentials over plain HTTP.
+3. When repository policy applies, finish validating `.create-issue.toml` with the rules that depend on the resolved provider.
+4. Freeze the target as provider, host, and project, and show it in the draft. Bind every tracker command to it as described in [references/forges.md](references/forges.md). A later conflict stops the run.
 
 ## Classify the Request
 
