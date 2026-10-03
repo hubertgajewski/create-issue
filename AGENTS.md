@@ -17,6 +17,8 @@ workflow:
   template handling.
 - `skills/create-issue/references/configuration.md` — the `.create-issue.toml` schema,
   validation, and precedence.
+- `skills/create-issue/references/reference-grammar.md` — accepted target project and parent
+  issue references. `scripts/normalize_reference.py` must implement it exactly.
 
 When a document and the tests disagree, that is a bug to report, not a discrepancy to
 paper over.
@@ -60,6 +62,7 @@ skills/create-issue/       The portable package. Copied into a client on its own
   agents/openai.yaml       Client interface metadata.
   references/              Documents SKILL.md loads on demand. Normative.
     templates/             Built-in issue body templates.
+  scripts/                 Standard-library helpers. Python 3.10 compatible.
 tests/                     Test suite for the repository and the package.
 requirements-test.txt      Test-only dependencies.
 AGENTS.md                  Instructions for agents working in this repository.

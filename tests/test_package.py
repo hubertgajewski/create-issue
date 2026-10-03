@@ -71,10 +71,12 @@ class PackageTests(unittest.TestCase):
             "agents/openai.yaml",
             "references/configuration.md",
             "references/forges.md",
+            "references/reference-grammar.md",
             "references/templates/story.md",
             "references/templates/bug.md",
             "references/templates/task.md",
             "references/templates/epic.md",
+            "scripts/normalize_reference.py",
         ):
             with self.subTest(relative=relative):
                 path = SKILL / relative
