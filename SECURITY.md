@@ -7,11 +7,11 @@ project. This link opens the issue form with confidentiality already selected:
 
 <https://gitlab.com/hubertgajewski-ai/create-issue/-/issues/new?issue[confidential]=true>
 
-The parameter sets the default, so confirm before submitting that **This issue is
-confidential and should only be visible to team members with at least Reporter access** is
-still ticked. Confidential issues are visible only to project members, so the report stays
-private while it is triaged. If you reached the form by another route, tick that box
-yourself.
+The parameter only sets the default, so confirm before submitting that the confidentiality
+box below the description is still ticked. If you reached the form by another route, tick
+that box yourself. A confidential issue is hidden from the public and from project members
+without a sufficient role; who can read it is governed by GitLab's
+[confidential issue access rules](https://docs.gitlab.com/user/project/issues/confidential_issues/).
 
 Do not report vulnerabilities in a public issue, a merge request, or a commit message.
 
