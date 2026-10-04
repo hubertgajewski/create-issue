@@ -63,6 +63,10 @@ skills/create-issue/       The portable package. Copied into a client on its own
   references/              Documents SKILL.md loads on demand. Normative.
     templates/             Built-in issue body templates.
   scripts/                 Standard-library helpers. Python 3.10 compatible.
+  .claude-plugin/plugin.json
+                           Claude Code client metadata. Carries the package version.
+  README.md CHANGELOG.md LICENSE
+                           Package overview, version history, and a copy of the root LICENSE.
 tests/                     Test suite for the repository and the package.
 docs/                      User and maintainer documentation. Never shipped inside the package.
 README.md                  Project overview for people installing and using the skill.

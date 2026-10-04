@@ -72,6 +72,8 @@ class RepositoryDocsTests(unittest.TestCase):
         required = [
             *tracked_root_markdown(),
             "skills/create-issue/SKILL.md",
+            "skills/create-issue/README.md",
+            "skills/create-issue/CHANGELOG.md",
             "skills/create-issue/references/",
         ]
         for path in required:

@@ -28,6 +28,11 @@ skills/create-issue/       The portable package. Copied into a client on its own
   agents/openai.yaml       Client interface metadata.
   references/              Documents SKILL.md loads on demand. Normative.
     templates/             Built-in issue body templates.
+  scripts/                 Standard-library helpers. Python 3.10 compatible.
+  .claude-plugin/plugin.json
+                           Claude Code client metadata. Carries the package version.
+  README.md CHANGELOG.md LICENSE
+                           Package overview, version history, and a copy of the root LICENSE.
 tests/                     Test suite for the repository and the package.
 docs/                      User and maintainer documentation. Never shipped inside the package.
 assets/                    Project icons. Never shipped inside the package.
@@ -114,6 +119,9 @@ Each document owns one thing; do not duplicate content between them.
 | `skills/create-issue/SKILL.md` | The workflow the agent follows. |
 | `skills/create-issue/references/` | Forge adapters, the configuration schema, and the built-in issue templates. |
 | `skills/create-issue/agents/openai.yaml` | Client interface metadata. |
+| `skills/create-issue/.claude-plugin/plugin.json` | Claude Code client metadata and the package version. |
+| `skills/create-issue/README.md` | The package overview and invocation syntax for a copy installed on its own. Its invocation table must match `docs/installation.md`. |
+| `skills/create-issue/CHANGELOG.md` | The package version history. Its latest version must equal the manifest `version`. |
 | `README.md` | The project overview, boundaries, and quick start. |
 | `docs/installation.md` | Installing and updating the skill in each documented client. |
 | `docs/configuration.md` | The user guide to `.create-issue.toml`. `references/configuration.md` stays normative, and `tests/test_configuration_documentation.py` fails when the two disagree. |

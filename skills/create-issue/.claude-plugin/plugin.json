@@ -1,0 +1,12 @@
+{
+  "name": "create-issue",
+  "displayName": "Create Issue",
+  "version": "1.0.0",
+  "description": "Draft well-structured GitHub or GitLab issues and create each one only after you approve the draft",
+  "author": {
+    "name": "Hubert Gajewski"
+  },
+  "homepage": "https://gitlab.com/hubertgajewski-ai/create-issue",
+  "repository": "https://gitlab.com/hubertgajewski-ai/create-issue",
+  "license": "MIT"
+}
