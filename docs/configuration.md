@@ -51,10 +51,13 @@ checkout, and you either name no project or name the project of one of the check
 remotes. When you name another project, the file is not read at all and package defaults
 apply.
 
-The skill reads the file from a trusted committed revision: the default-branch tip of
+The skill reads the file from a trusted committed revision, never from the working tree, so a
+modified or untracked copy has no effect. That revision is the default-branch tip of
 `origin`, or of the only forge remote when there is no `origin`, after a fetch when the
-network allows it. A modified, untracked, or unmerged copy has no effect. Commit the file and
-merge it into the default branch before relying on it.
+network allows it. Otherwise it is the checkout's committed `HEAD`, so the file as committed
+on the current branch applies, even when that branch is not merged. With no commit at all,
+package defaults apply. To make the file apply wherever the skill runs, commit it and merge
+it into the default branch.
 
 ## A minimal file
 

@@ -5,26 +5,25 @@ so these tests require all three to describe the same keys, types, and accepted 
 from __future__ import annotations
 
 import re
-import sys
 import unittest
-from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
+from configuration_schema import (
+    BACKTICKED,
+    REFERENCE,
+    TOML_BLOCK,
+    TYPE_SHAPES,
+    compatible,
+    key_cells,
+    leaf_values,
+    section_of,
+    tomllib,
+    value_shape,
+)
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REFERENCE = ROOT / "skills" / "create-issue" / "references" / "configuration.md"
-
-HEADING = re.compile(r"^##[ \t]+(.+?)[ \t]*$", re.MULTILINE)
-TOML_BLOCK = re.compile(r"^```toml\n(.*?)^```\s*$", re.DOTALL | re.MULTILINE)
-KEY_ROW = re.compile(r"^\| `([^`]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|", re.MULTILINE)
 TABLE_HEADER = re.compile(r"^\[\[?([a-z_.]+)\]\]?\s*$")
 ASSIGNMENT = re.compile(r"^([a-z_]+)\s*=")
 ENUM_COMMENT = re.compile(r"#\s*([a-z-]+(?:\s*\|\s*[a-z-]+)+)\s*$")
-BACKTICKED = re.compile(r"`([^`]+)`")
 
 # Keys whose accepted values form a closed set. Pinned so that a new enum key, or an
 # enum comment reworded until it is no longer recognized, fails instead of escaping checks.
@@ -35,84 +34,35 @@ ENUM_KEYS = {
     "milestone.policy",
     "estimation.target",
 }
-TYPE_NAMES = {
-    "integer": "integer",
-    "string": "string",
-    "string array": ("array", "string"),
-    "integer array": ("array", "integer"),
-}
 
 
-def section_of(heading: str) -> str:
-    text = REFERENCE.read_text(encoding="utf-8")
-    matches = [m for m in HEADING.finditer(text) if m.group(1) == heading]
-    if not matches:
-        raise AssertionError(f"configuration.md has no '## {heading}' section")
-    start = matches[0].end()
-    following = HEADING.search(text, start)
-    return text[start:following.start() if following else len(text)]
+def reference_section(heading: str) -> str:
+    return section_of(REFERENCE.read_text(encoding="utf-8"), heading)
 
 
 def schema_block() -> str:
-    blocks = TOML_BLOCK.findall(section_of("Schema"))
+    blocks = TOML_BLOCK.findall(reference_section("Schema"))
     if len(blocks) != 1:
         raise AssertionError("expected exactly one TOML block under '## Schema'")
     return blocks[0]
 
 
-def value_shape(value: object) -> object:
-    if isinstance(value, bool):
-        return "boolean"
-    if isinstance(value, int):
-        return "integer"
-    if isinstance(value, str):
-        return "string"
-    if isinstance(value, list):
-        shapes = {value_shape(item) for item in value}
-        if len(shapes) > 1:
-            raise AssertionError(f"mixed array: {value!r}")
-        return ("array", shapes.pop() if shapes else "empty")
-    raise AssertionError(f"unsupported TOML value: {value!r}")
-
-
 def leaf_shapes(document: dict[str, object]) -> dict[str, object]:
     """Map every leaf key path to its shape; arrays of tables use `name[]`."""
-    shapes: dict[str, object] = {}
-
-    def visit(table: dict[str, object], prefix: str) -> None:
-        for key, value in table.items():
-            path = f"{prefix}{key}"
-            if isinstance(value, dict):
-                visit(value, f"{path}.")
-            elif isinstance(value, list) and value and all(isinstance(v, dict) for v in value):
-                for entry in value:
-                    visit(entry, f"{path}[].")
-            else:
-                shapes[path] = value_shape(value)
-
-    visit(document, "")
-    return shapes
-
-
-def compatible(actual: object, declared: object) -> bool:
-    return actual == declared or (
-        isinstance(declared, tuple) and actual == ("array", "empty")
-    )
+    return {path: value_shape(value) for path, value in leaf_values(document)}
 
 
 def key_table() -> dict[str, dict[str, object]]:
-    rows: dict[str, dict[str, object]] = {}
-    for key, type_name, default, accepted in KEY_ROW.findall(section_of("Keys")):
-        if key == "Key":
-            continue
-        if key in rows:
-            raise AssertionError(f"duplicate Keys row for {key}")
-        rows[key] = {
-            "type": TYPE_NAMES[type_name.strip()],
-            "default": default.strip(),
+    return {
+        key: {
+            "type": TYPE_SHAPES[type_name],
+            "default": default,
             "accepted": BACKTICKED.findall(accepted),
         }
-    return rows
+        for key, (type_name, default, accepted) in key_cells(
+            REFERENCE.read_text(encoding="utf-8")
+        ).items()
+    }
 
 
 def schema_enums() -> dict[str, set[str]]:
@@ -190,7 +140,7 @@ class ConfigurationReferenceTests(unittest.TestCase):
     def test_examples_use_only_documented_keys_and_values(self) -> None:
         schema = leaf_shapes(tomllib.loads(schema_block()))
         enums = schema_enums()
-        examples = TOML_BLOCK.findall(section_of("Examples"))
+        examples = TOML_BLOCK.findall(reference_section("Examples"))
         self.assertGreaterEqual(len(examples), 2)
         for index, block in enumerate(examples, start=1):
             with self.subTest(example=index):
@@ -203,13 +153,13 @@ class ConfigurationReferenceTests(unittest.TestCase):
                         self.assertIn(lookup(document, key), enums[key])
 
     def test_category_examples_declare_categories(self) -> None:
-        for block in TOML_BLOCK.findall(section_of("Examples")):
+        for block in TOML_BLOCK.findall(reference_section("Examples")):
             title = tomllib.loads(block).get("title", {})
             if title.get("prefix") == "category":
                 self.assertTrue(title.get("categories"))
 
     def test_github_project_examples_are_complete(self) -> None:
-        for block in TOML_BLOCK.findall(section_of("Examples")):
+        for block in TOML_BLOCK.findall(reference_section("Examples")):
             document = tomllib.loads(block)
             if document.get("estimation", {}).get("target") == "github-project":
                 project = document.get("github_project", {})

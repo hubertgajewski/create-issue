@@ -9,54 +9,29 @@ drift, and these tests fail with a message naming the key.
 from __future__ import annotations
 
 import re
-import sys
 import unittest
-from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
+from configuration_schema import (
+    BACKTICKED,
+    REFERENCE,
+    ROOT,
+    TOML_BLOCK,
+    TYPE_SHAPES,
+    compatible,
+    key_cells,
+    leaf_values,
+    section_of,
+    tomllib,
+    value_shape,
+)
 
 
-ROOT = Path(__file__).resolve().parents[1]
-REFERENCE = ROOT / "skills" / "create-issue" / "references" / "configuration.md"
 GUIDE = ROOT / "docs" / "configuration.md"
 
-HEADING = re.compile(r"^##[ \t]+(.+?)[ \t]*$", re.MULTILINE)
-TOML_BLOCK = re.compile(r"^```toml\n(.*?)^```\s*$", re.DOTALL | re.MULTILINE)
-# The first four cells of a key row. The reference has a fifth, Meaning, which the guide
-# replaces with prose, so it is not compared.
-KEY_ROW = re.compile(r"^\| `([^`]+)` \| ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|", re.MULTILINE)
 ENUM_CELL = re.compile(r"`[^`]+`(?:, `[^`]+`)+")
-BACKTICKED = re.compile(r"`([^`]+)`")
+# The reference's Keys table has a fifth cell, Meaning, which the guide replaces with prose,
+# so only these three are compared.
 FIELDS = ("type", "default", "accepted values")
-TYPE_SHAPES = {
-    "integer": "integer",
-    "string": "string",
-    "string array": ("array", "string"),
-    "integer array": ("array", "integer"),
-}
-
-
-def section_of(text: str, heading: str) -> str:
-    """The text under `## <heading>`, up to the next level-2 heading."""
-    matches = [m for m in HEADING.finditer(text) if m.group(1) == heading]
-    if not matches:
-        raise AssertionError(f"no '## {heading}' section")
-    start = matches[0].end()
-    following = HEADING.search(text, start)
-    return text[start:following.start() if following else len(text)]
-
-
-def key_rows(text: str) -> dict[str, tuple[str, ...]]:
-    """Map each key in the `## Keys` section to its type, default, and accepted values."""
-    rows: dict[str, tuple[str, ...]] = {}
-    for key, *cells in KEY_ROW.findall(section_of(text, "Keys")):
-        if key in rows:
-            raise AssertionError(f"{key}: documented in more than one row")
-        rows[key] = tuple(" ".join(cell.split()) for cell in cells)
-    return rows
 
 
 def drift(reference: dict[str, tuple[str, ...]], guide: dict[str, tuple[str, ...]]) -> list[str]:
@@ -78,48 +53,14 @@ def drift(reference: dict[str, tuple[str, ...]], guide: dict[str, tuple[str, ...
 
 
 def drift_between(reference_text: str, guide_text: str) -> list[str]:
-    return drift(key_rows(reference_text), key_rows(guide_text))
-
-
-def value_shape(value: object) -> object:
-    if isinstance(value, bool):
-        return "boolean"
-    if isinstance(value, int):
-        return "integer"
-    if isinstance(value, str):
-        return "string"
-    if isinstance(value, list):
-        shapes = {value_shape(item) for item in value}
-        if len(shapes) > 1:
-            raise AssertionError(f"mixed array: {value!r}")
-        return ("array", shapes.pop() if shapes else "empty")
-    raise AssertionError(f"unsupported TOML value: {value!r}")
-
-
-def leaf_values(document: dict[str, object]) -> list[tuple[str, object]]:
-    """Every leaf key path with its value; arrays of tables use `name[]`."""
-    leaves: list[tuple[str, object]] = []
-
-    def visit(table: dict[str, object], prefix: str) -> None:
-        for key, value in table.items():
-            path = f"{prefix}{key}"
-            if isinstance(value, dict):
-                visit(value, f"{path}.")
-            elif isinstance(value, list) and value and all(isinstance(v, dict) for v in value):
-                for entry in value:
-                    visit(entry, f"{path}[].")
-            else:
-                leaves.append((path, value))
-
-    visit(document, "")
-    return leaves
+    return drift(key_cells(reference_text), key_cells(guide_text))
 
 
 class ConfigurationDocumentationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.reference_text = REFERENCE.read_text(encoding="utf-8")
         self.guide_text = GUIDE.read_text(encoding="utf-8")
-        self.reference = key_rows(self.reference_text)
+        self.reference = key_cells(self.reference_text)
 
     def assert_no_drift(self, messages: list[str]) -> None:
         if messages:
@@ -143,11 +84,9 @@ class ConfigurationDocumentationTests(unittest.TestCase):
             for key, value in leaf_values(tomllib.loads(block)):
                 with self.subTest(block=index, key=key):
                     self.assertIn(key, self.reference, f"{key}: not a reference key")
-                    declared = TYPE_SHAPES[self.reference[key][0]]
                     shape = value_shape(value)
                     self.assertTrue(
-                        shape == declared
-                        or (isinstance(declared, tuple) and shape == ("array", "empty")),
+                        compatible(shape, TYPE_SHAPES[self.reference[key][0]]),
                         f"{key}: {shape} is not the declared {self.reference[key][0]}",
                     )
 
@@ -178,7 +117,7 @@ class DriftDetectionTests(unittest.TestCase):
         self.reference_text = REFERENCE.read_text(encoding="utf-8")
         rows = "".join(
             f"| `{key}` | {' | '.join(cells)} |\n"
-            for key, cells in key_rows(self.reference_text).items()
+            for key, cells in key_cells(self.reference_text).items()
         )
         self.guide_text = f"# Configuration\n\n## Keys\n\n{rows}"
 
