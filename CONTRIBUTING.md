@@ -29,9 +29,10 @@ skills/create-issue/       The portable package. Copied into a client on its own
   references/              Documents SKILL.md loads on demand. Normative.
     templates/             Built-in issue body templates.
 tests/                     Test suite for the repository and the package.
+docs/                      User and maintainer documentation. Never shipped inside the package.
 assets/                    Project icons. Never shipped inside the package.
 requirements-test.txt      Test-only dependencies.
-SECURITY.md CONTRIBUTING.md AGENTS.md LICENSE
+README.md SECURITY.md CONTRIBUTING.md AGENTS.md LICENSE
                            Repository concerns. Never shipped inside the package.
 ```
 
@@ -56,8 +57,10 @@ python3 -m unittest discover -s tests -v
 
 The suite must pass before you open a merge request. It also checks the documentation
 itself: every relative link in the repository's Markdown resolves, the validation commands
-above match `AGENTS.md`, and the documentation ownership table below names only existing
-paths and has a row for every root-level Markdown file.
+above match `AGENTS.md`, the documentation ownership table below names only existing
+paths and has a row for every root-level Markdown file, and `docs/configuration.md` gives
+every `.create-issue.toml` key the type, default, and accepted values the reference does.
+A configuration key change therefore updates both documents.
 Add tests with behavior changes the suite can observe, such as a configuration key, a
 template section, or a package file. State in the merge request why a change needs no test
 when it needs none. `git status` must be clean afterwards; generated artifacts are covered by
@@ -111,6 +114,9 @@ Each document owns one thing; do not duplicate content between them.
 | `skills/create-issue/SKILL.md` | The workflow the agent follows. |
 | `skills/create-issue/references/` | Forge adapters, the configuration schema, and the built-in issue templates. |
 | `skills/create-issue/agents/openai.yaml` | Client interface metadata. |
+| `README.md` | The project overview, boundaries, and quick start. |
+| `docs/installation.md` | Installing and updating the skill in each documented client. |
+| `docs/configuration.md` | The user guide to `.create-issue.toml`. `references/configuration.md` stays normative, and `tests/test_configuration_documentation.py` fails when the two disagree. |
 | `CONTRIBUTING.md` | How to develop, validate, and submit changes. |
 | `SECURITY.md` | Vulnerability scope and private reporting. |
 | `AGENTS.md` | Instructions for agents working in this repository. |
