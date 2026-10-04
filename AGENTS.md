@@ -64,7 +64,8 @@ skills/create-issue/       The portable package. Copied into a client on its own
     templates/             Built-in issue body templates.
   scripts/                 Standard-library helpers. Python 3.10 compatible.
 tests/                     Test suite for the repository and the package.
-docs/                      Maintainer documentation.
+docs/                      User and maintainer documentation. Never shipped inside the package.
+README.md                  Project overview for people installing and using the skill.
 .gitlab-ci.yml             The GitLab test pipeline. Runs the suite on Python 3.10 and 3.14.
 requirements-test.txt      Test-only dependencies.
 AGENTS.md                  Instructions for agents working in this repository.
