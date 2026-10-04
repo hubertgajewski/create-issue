@@ -52,6 +52,10 @@ The installed layout must be:
 
 ```text
 <skill-directory>/create-issue/SKILL.md
+<skill-directory>/create-issue/README.md
+<skill-directory>/create-issue/CHANGELOG.md
+<skill-directory>/create-issue/LICENSE
+<skill-directory>/create-issue/.claude-plugin/plugin.json
 <skill-directory>/create-issue/agents/openai.yaml
 <skill-directory>/create-issue/references/
 <skill-directory>/create-issue/scripts/normalize_reference.py
