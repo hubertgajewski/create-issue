@@ -12,6 +12,8 @@ test case — can go straight to a merge request.
   test-only `tomli` backport on Python 3.10. The packaged skill has no third-party Python
   runtime dependencies.
 - Git.
+- PowerShell 7 (`pwsh`) to run the PowerShell installer tests, which skip without it. CI
+  runs them in the `installer_powershell_test` job.
 - `glab` for issues and merge requests on this project. `gh` is only needed when working on
   the GitHub adapter.
 
@@ -36,6 +38,11 @@ skills/create-issue/       The portable package. Copied into a client on its own
 tests/                     Test suite for the repository and the package.
 docs/                      User and maintainer documentation. Never shipped inside the package.
 assets/                    Project icons. Never shipped inside the package.
+scripts/                   Release tooling run by CI. Never shipped inside the package.
+create-issue-install.sh create-issue-install.ps1
+                           Release installers. Never shipped inside the package.
+release-contract.json      Client skill directories and release asset names the installers
+                           and the release jobs share.
 requirements-test.txt      Test-only dependencies.
 README.md SECURITY.md CONTRIBUTING.md AGENTS.md LICENSE
                            Repository concerns. Never shipped inside the package.
