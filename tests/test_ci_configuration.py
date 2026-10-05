@@ -333,6 +333,19 @@ class CIConfigurationTests(unittest.TestCase):
 
         self.assertEqual(release_check_problems(build.get("script")), [])
 
+    def test_release_archives_are_reproducible(self) -> None:
+        # Archiving a tree stamps it with the current time, so a rebuilt tag would produce
+        # different bytes and fail the publisher's immutable-asset check.
+        script = jobs(self.document)["build_release"]["script"]
+        assert isinstance(script, list)
+        archives = [line for line in script if str(line).startswith("git archive ")]
+
+        self.assertEqual(len(archives), 2)
+        self.assertIn('release_mtime="$(git show -s --format=%cI "$CI_COMMIT_SHA")"', script)
+        for archive in archives:
+            with self.subTest(archive=archive):
+                self.assertIn('--mtime="$release_mtime"', archive)
+
     def test_release_check_names_a_check_moved_after_the_build(self) -> None:
         script = copy.deepcopy(jobs(self.document)["build_release"]["script"])
         assert isinstance(script, list)

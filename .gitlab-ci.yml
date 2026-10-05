@@ -49,8 +49,9 @@ installer_powershell_test:
     - python3 -m unittest tests.test_installers -v
 
 # Every trust check runs before the first asset is built. An unprotected tag still matches
-# the rule so that it fails visibly instead of silently releasing nothing. The full image
-# includes Git.
+# the rule so that it fails visibly instead of silently releasing nothing. The archives take
+# their timestamps from the tagged commit, because Git stamps a tree with the current time
+# and the publisher rejects a rebuilt asset whose bytes differ. The full image includes Git.
 build_release:
   stage: release
   image: python:3.14-trixie@sha256:d0ef532dea88a06a0f950a40f95c553086c1f282bf8e313d328f11d289f72582
@@ -70,9 +71,10 @@ build_release:
     - test "$CI_COMMIT_TAG" = "v$package_version" || { echo "release tag $CI_COMMIT_TAG differs from package version $package_version" >&2; exit 1; }
     - grep -qxF "version=$CI_COMMIT_TAG" create-issue-install.sh || { echo "create-issue-install.sh defaults to another version" >&2; exit 1; }
     - grep -qxF "    [string] \$Version = \"$CI_COMMIT_TAG\"," create-issue-install.ps1 || { echo "create-issue-install.ps1 defaults to another version" >&2; exit 1; }
+    - release_mtime="$(git show -s --format=%cI "$CI_COMMIT_SHA")"
     - mkdir release-assets
-    - git archive --format=tar.gz --prefix=create-issue/ --output="release-assets/create-issue-$CI_COMMIT_TAG.tar.gz" "$CI_COMMIT_TAG:skills/create-issue"
-    - git archive --format=zip --prefix=create-issue/ --output="release-assets/create-issue-$CI_COMMIT_TAG.zip" "$CI_COMMIT_TAG:skills/create-issue"
+    - git archive --format=tar.gz --prefix=create-issue/ --mtime="$release_mtime" --output="release-assets/create-issue-$CI_COMMIT_TAG.tar.gz" "$CI_COMMIT_TAG:skills/create-issue"
+    - git archive --format=zip --prefix=create-issue/ --mtime="$release_mtime" --output="release-assets/create-issue-$CI_COMMIT_TAG.zip" "$CI_COMMIT_TAG:skills/create-issue"
     - git show "$CI_COMMIT_TAG:create-issue-install.sh" > release-assets/create-issue-install.sh
     - git show "$CI_COMMIT_TAG:create-issue-install.ps1" > release-assets/create-issue-install.ps1
     - cd release-assets
