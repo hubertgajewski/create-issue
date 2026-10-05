@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "client_roots": {
+    "claude-code": ".claude/skills",
+    "codex": ".agents/skills",
+    "cursor": ".agents/skills",
+    "gemini": ".agents/skills"
+  },
+  "client_labels": {
+    "claude-code": "Claude Code",
+    "codex": "Codex",
+    "cursor": "Cursor",
+    "gemini": "Gemini CLI"
+  },
+  "unsupported_clients": [
+    "claude-chat"
+  ],
+  "release_assets": [
+    "create-issue-{tag}.tar.gz",
+    "create-issue-{tag}.tar.gz.sha256",
+    "create-issue-{tag}.zip",
+    "create-issue-{tag}.zip.sha256",
+    "create-issue-install.sh",
+    "create-issue-install.sh.sha256",
+    "create-issue-install.ps1",
+    "create-issue-install.ps1.sha256"
+  ]
+}

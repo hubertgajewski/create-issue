@@ -69,8 +69,14 @@ skills/create-issue/       The portable package. Copied into a client on its own
                            Package overview, version history, and a copy of the root LICENSE.
 tests/                     Test suite for the repository and the package.
 docs/                      User and maintainer documentation. Never shipped inside the package.
+scripts/                   Release tooling run by CI. Never shipped inside the package.
+create-issue-install.sh create-issue-install.ps1
+                           Release installers. Never shipped inside the package.
+release-contract.json      Client skill directories and release asset names the installers
+                           and the release jobs share.
 README.md                  Project overview for people installing and using the skill.
-.gitlab-ci.yml             The GitLab test pipeline. Runs the suite on Python 3.10 and 3.14.
+.gitlab-ci.yml             The GitLab pipeline. Runs the suite on Python 3.10 and 3.14 and
+                           under PowerShell, and publishes releases from protected tags.
 requirements-test.txt      Test-only dependencies.
 AGENTS.md                  Instructions for agents working in this repository.
 ```

@@ -67,8 +67,10 @@ templates, and repository policy files.
 
 ## Quick start
 
-1. Copy `skills/create-issue/` on its own into your client's skill directory. The
-   [installation guide](docs/installation.md) lists the directory for each client and scope.
+1. Install a release with the checksum-verified installer, or copy `skills/create-issue/` on
+   its own into your client's skill directory. The
+   [installation guide](docs/installation.md) gives the commands and the directory for each
+   client and scope.
 2. Authenticate `gh` for GitHub or `glab` for GitLab.
 3. From the repository you want to file an issue in, invoke the skill:
 

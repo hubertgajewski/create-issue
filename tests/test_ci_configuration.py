@@ -1,7 +1,8 @@
-"""`.gitlab-ci.yml` decides which pushes and merge requests are tested. Its workflow rule
-order decides whether a pipeline runs at all, and an image referenced by tag can change
-under a passing pipeline, so these tests pin the rules, the Python matrix, and image
-digests, and name what breaks them."""
+"""`.gitlab-ci.yml` decides which pushes and merge requests are tested and which tags are
+released. Its workflow rule order decides whether a pipeline runs at all, an image referenced
+by tag can change under a passing pipeline, and a release job that builds before it checks
+the tag can publish an untrusted release, so these tests pin the rules, the Python matrix,
+image digests, and the release checks, and name what breaks them."""
 
 from __future__ import annotations
 
@@ -41,11 +42,21 @@ CI_ENABLED_GATE = {"if": '$CI_ENABLED == "false"', "when": "never"}
 WORKFLOW_RULES = (
     WEB_RULE,
     CI_ENABLED_GATE,
+    {"if": "$CI_COMMIT_TAG"},
     {"if": '$CI_PIPELINE_SOURCE == "merge_request_event"'},
     {"if": "$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS", "when": "never"},
     {"if": "$CI_COMMIT_BRANCH"},
 )
 SUPPORTED_PYTHONS = {"3.10", "3.14"}
+RELEASE_TAG = r"$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/"
+# Each check must fail the build job before its first step that writes a release asset.
+RELEASE_TAG_CHECKS = {
+    "protected": '"$CI_COMMIT_REF_PROTECTED" = "true"',
+    "annotated": '"$(git cat-file -t "$CI_COMMIT_TAG")" = "tag"',
+    "contained in main": 'git merge-base --is-ancestor "$CI_COMMIT_SHA" origin/main',
+    "equal to the package version": '"$CI_COMMIT_TAG" = "v$package_version"',
+}
+FIRST_RELEASE_WRITE = "mkdir release-assets"
 SUITE_SCRIPT = [
     "python -m pip install --require-hashes -r requirements-test.txt",
     "python -m unittest discover -s tests -v",
@@ -220,6 +231,24 @@ def image_problems(document: dict[str, object]) -> list[str]:
     return problems
 
 
+def release_check_problems(script: object) -> list[str]:
+    """Name each release tag check that is missing or runs after the first asset write."""
+    if not isinstance(script, list):
+        return ["build_release: script must be a list"]
+    lines = [str(line) for line in script]
+    writes = [index for index, line in enumerate(lines) if line == FIRST_RELEASE_WRITE]
+    if not writes:
+        return [f"build_release: `{FIRST_RELEASE_WRITE}` is missing"]
+    problems = []
+    for name, check in RELEASE_TAG_CHECKS.items():
+        positions = [index for index, line in enumerate(lines) if check in line]
+        if not positions:
+            problems.append(f"build_release: the {name} check is missing")
+        elif positions[0] > writes[0]:
+            problems.append(f"build_release: the {name} check runs after `{FIRST_RELEASE_WRITE}`")
+    return problems
+
+
 class CIConfigurationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.document = load_ci_configuration()
@@ -272,6 +301,62 @@ class CIConfigurationTests(unittest.TestCase):
             assert match is not None
             versions.append(match.group(1))
         self.assertEqual(sorted(versions), sorted(SUPPORTED_PYTHONS))
+
+    def test_powershell_installer_is_tested(self) -> None:
+        job = jobs(self.document).get("installer_powershell_test")
+        self.assertIsNotNone(job, "an installer_powershell_test job is required")
+        assert job is not None
+
+        self.assertEqual(job.get("stage"), "test")
+        self.assertIn("python3 -m unittest tests.test_installers -v", job.get("script", []))
+
+    def test_release_jobs_run_only_for_semantic_version_tags(self) -> None:
+        release_jobs = jobs(self.document)
+        build = release_jobs.get("build_release")
+        publish = release_jobs.get("publish_release")
+        self.assertIsNotNone(build, "a build_release job is required")
+        self.assertIsNotNone(publish, "a publish_release job is required")
+        assert build is not None and publish is not None
+
+        # build_release also matches unprotected tags, so that they fail visibly.
+        self.assertEqual(build.get("rules"), [{"if": RELEASE_TAG}])
+        self.assertEqual(
+            publish.get("rules"),
+            [{"if": f'{RELEASE_TAG} && $CI_COMMIT_REF_PROTECTED == "true"'}],
+        )
+        self.assertEqual(publish.get("needs"), ["build_release"])
+
+    def test_release_tag_is_checked_before_any_asset_is_built(self) -> None:
+        build = jobs(self.document).get("build_release")
+        self.assertIsNotNone(build, "a build_release job is required")
+        assert build is not None
+
+        self.assertEqual(release_check_problems(build.get("script")), [])
+
+    def test_release_archives_are_reproducible(self) -> None:
+        # Archiving a tree stamps it with the current time, so a rebuilt tag would produce
+        # different bytes and fail the publisher's immutable-asset check.
+        script = jobs(self.document)["build_release"]["script"]
+        assert isinstance(script, list)
+        archives = [line for line in script if str(line).startswith("git archive ")]
+
+        self.assertEqual(len(archives), 2)
+        self.assertIn('release_mtime="$(git show -s --format=%cI "$CI_COMMIT_SHA")"', script)
+        for archive in archives:
+            with self.subTest(archive=archive):
+                self.assertIn('--mtime="$release_mtime"', archive)
+
+    def test_release_check_names_a_check_moved_after_the_build(self) -> None:
+        script = copy.deepcopy(jobs(self.document)["build_release"]["script"])
+        assert isinstance(script, list)
+        check = next(line for line in script if RELEASE_TAG_CHECKS["protected"] in line)
+        script.remove(check)
+        script.append(check)
+
+        self.assertEqual(
+            release_check_problems(script),
+            [f"build_release: the protected check runs after `{FIRST_RELEASE_WRITE}`"],
+        )
 
     def test_job_images_are_pinned_by_digest(self) -> None:
         self.assertEqual(image_problems(self.document), [])

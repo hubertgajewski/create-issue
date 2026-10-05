@@ -6,6 +6,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "web"
     - if: $CI_ENABLED == "false"
       when: never
+    - if: $CI_COMMIT_TAG
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
@@ -18,6 +19,7 @@ variables:
 
 stages:
   - test
+  - release
 
 # Python 3.10 installs tomli and exercises the fallback parser; 3.14 uses tomllib. Images
 # are pinned by manifest digest; update the tag and digest together.
@@ -32,3 +34,67 @@ test:
     - python --version
     - python -m pip install --require-hashes -r requirements-test.txt
     - python -m unittest discover -s tests -v
+
+# The Python images have no PowerShell, so the PowerShell installer is tested here.
+installer_powershell_test:
+  stage: test
+  image:
+    name: mcr.microsoft.com/powershell:7.4-ubuntu-22.04@sha256:62300a213a9293916333df2b014cd3a8f22fb0b0b65f2bb446aaf436bcf8c868
+    entrypoint:
+      - ""
+  script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends python3
+    - pwsh --version
+    - python3 -m unittest tests.test_installers -v
+
+# Every trust check runs before the first asset is built. An unprotected tag still matches
+# the rule so that it fails visibly instead of silently releasing nothing. The archives take
+# their timestamps from the tagged commit, because Git stamps a tree with the current time
+# and the publisher rejects a rebuilt asset whose bytes differ. The full image includes Git.
+build_release:
+  stage: release
+  image: python:3.14-trixie@sha256:d0ef532dea88a06a0f950a40f95c553086c1f282bf8e313d328f11d289f72582
+  variables:
+    GIT_DEPTH: "0"
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/
+  script:
+    - python --version
+    - git --version
+    - test "$CI_COMMIT_REF_PROTECTED" = "true" || { echo "release tag $CI_COMMIT_TAG is not protected" >&2; exit 1; }
+    - test "$(git cat-file -t "$CI_COMMIT_TAG")" = "tag" || { echo "release tag $CI_COMMIT_TAG is not annotated" >&2; exit 1; }
+    - test "$(git rev-parse "$CI_COMMIT_TAG^{commit}")" = "$CI_COMMIT_SHA" || { echo "release tag $CI_COMMIT_TAG does not target the pipeline commit" >&2; exit 1; }
+    - git fetch --no-tags origin "refs/heads/main:refs/remotes/origin/main"
+    - git merge-base --is-ancestor "$CI_COMMIT_SHA" origin/main || { echo "release tag $CI_COMMIT_TAG is not on main" >&2; exit 1; }
+    - package_version="$(python -c 'import json; print(json.load(open("skills/create-issue/.claude-plugin/plugin.json"))["version"])')"
+    - test "$CI_COMMIT_TAG" = "v$package_version" || { echo "release tag $CI_COMMIT_TAG differs from package version $package_version" >&2; exit 1; }
+    - grep -qxF "version=$CI_COMMIT_TAG" create-issue-install.sh || { echo "create-issue-install.sh defaults to another version" >&2; exit 1; }
+    - grep -qxF "    [string] \$Version = \"$CI_COMMIT_TAG\"," create-issue-install.ps1 || { echo "create-issue-install.ps1 defaults to another version" >&2; exit 1; }
+    - release_mtime="$(git show -s --format=%cI "$CI_COMMIT_SHA")"
+    - mkdir release-assets
+    - git archive --format=tar.gz --prefix=create-issue/ --mtime="$release_mtime" --output="release-assets/create-issue-$CI_COMMIT_TAG.tar.gz" "$CI_COMMIT_TAG:skills/create-issue"
+    - git archive --format=zip --prefix=create-issue/ --mtime="$release_mtime" --output="release-assets/create-issue-$CI_COMMIT_TAG.zip" "$CI_COMMIT_TAG:skills/create-issue"
+    - git show "$CI_COMMIT_TAG:create-issue-install.sh" > release-assets/create-issue-install.sh
+    - git show "$CI_COMMIT_TAG:create-issue-install.ps1" > release-assets/create-issue-install.ps1
+    - cd release-assets
+    - sha256sum "create-issue-$CI_COMMIT_TAG.tar.gz" > "create-issue-$CI_COMMIT_TAG.tar.gz.sha256"
+    - sha256sum "create-issue-$CI_COMMIT_TAG.zip" > "create-issue-$CI_COMMIT_TAG.zip.sha256"
+    - sha256sum create-issue-install.sh > create-issue-install.sh.sha256
+    - sha256sum create-issue-install.ps1 > create-issue-install.ps1.sha256
+  artifacts:
+    name: create-issue-$CI_COMMIT_TAG
+    paths:
+      - release-assets/
+    expire_in: 30 days
+
+publish_release:
+  stage: release
+  image: python:3.14-slim@sha256:0741d101873c12ab927e6f8653feb8862b9bd58771177acb1b885b95141f91b4
+  resource_group: release-$CI_COMMIT_TAG
+  needs:
+    - build_release
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/ && $CI_COMMIT_REF_PROTECTED == "true"
+  script:
+    - python scripts/publish_release.py --api-url "$CI_API_V4_URL" --project-id "$CI_PROJECT_ID" --project-url "$CI_PROJECT_URL" --tag "$CI_COMMIT_TAG" --commit-sha "$CI_COMMIT_SHA" --asset-directory release-assets
