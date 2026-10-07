@@ -210,8 +210,9 @@ common = ["Tests cover each acceptance criterion"]
 | --- | --- | --- | --- |
 | `definition_of_done.common` | string array | `[]` | nonempty strings |
 
-- **`common`** items are appended to every Definition of Done the selected template has,
-  unless an issue-specific item already covers them.
+- **`common`** is your team's Definition of Done: the items every issue must meet. They are
+  appended to the Done Checklist of every template that has one, after the issue-specific
+  items, unless an issue-specific item already covers them.
 
 ### Estimates
 

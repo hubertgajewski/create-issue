@@ -20,7 +20,7 @@ Use for existing behavior that deviates from documented, specified, or reasonabl
 | Detection | yes | How the bug was found, using the configured detection vocabulary when one exists, otherwise a short phrase or `Unknown`. |
 | Suspected Cause | no | A hypothesis with `path:line` references, explicitly labeled as unconfirmed. |
 | Acceptance Criteria | yes | `### AC1: <name>` onward, each a bulleted Given/When/Then scenario. The first restates the reproduction with the expected result; one requires a regression test. |
-| Definition of Done | yes | Issue-specific `- [ ]` items, then configured common items. |
+| Done Checklist | yes | Issue-specific `- [ ]` items, then the configured team-wide Definition of Done items. |
 
 ## Body
 
@@ -76,7 +76,7 @@ Unconfirmed: <hypothesis with path:line references>
 - **When** the automated test suite runs
 - **Then** a test that fails without the fix passes
 
-## Definition of Done
+## Done Checklist
 
 - [ ] <observable, verifiable item>
 ```

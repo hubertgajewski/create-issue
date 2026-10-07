@@ -97,9 +97,9 @@ Follow the selected template's section order exactly. Include every required sec
 - For tasks, each criterion is one observable, verifiable statement under its heading; Given/When/Then is optional.
 - Each criterion must be independently testable by an observer; reject wording such as "works correctly" or "is fast" without a measurable threshold.
 
-**Definition of Done**
+**Done Checklist**
 
-- Write issue-specific, observable items as unchecked task-list entries (`- [ ] ...`), then append every `definition_of_done.common` item that is not already covered.
+- Write issue-specific, observable items as unchecked task-list entries (`- [ ] ...`), then append every `definition_of_done.common` item that is not already covered. Those configured items are the team-wide Definition of Done, which is the same for every issue; issue-specific items are not part of it.
 - Phrase every item so a later implementer can attach concrete evidence to it.
 
 **Content rules**
