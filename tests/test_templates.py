@@ -23,7 +23,7 @@ EXPECTED = {
         ("Acceptance Criteria", True),
         ("Technical Notes", False),
         ("Dependencies", False),
-        ("Definition of Done", True),
+        ("Done Checklist", True),
     ],
     "bug": [
         ("Summary", True),
@@ -36,14 +36,14 @@ EXPECTED = {
         ("Detection", True),
         ("Suspected Cause", False),
         ("Acceptance Criteria", True),
-        ("Definition of Done", True),
+        ("Done Checklist", True),
     ],
     "task": [
         ("Summary", True),
         ("Motivation", True),
         ("Scope", True),
         ("Acceptance Criteria", True),
-        ("Definition of Done", True),
+        ("Done Checklist", True),
     ],
     "epic": [
         ("Outcome", True),
@@ -153,13 +153,13 @@ class TemplateTests(unittest.TestCase):
                     for keyword in ("Given", "When", "Then"):
                         self.assertIn(f"- **{keyword}**", scenario)
 
-    def test_definition_of_done_is_a_task_list(self) -> None:
+    def test_done_checklist_is_a_task_list(self) -> None:
         for name, expected in EXPECTED.items():
-            if "Definition of Done" not in dict(expected):
+            if "Done Checklist" not in dict(expected):
                 continue
             with self.subTest(template=name):
                 done = skeleton_section(
-                    skeleton(TEMPLATES / f"{name}.md"), "Definition of Done"
+                    skeleton(TEMPLATES / f"{name}.md"), "Done Checklist"
                 )
                 self.assertRegex(done, r"(?m)^- \[ \] \S")
 

@@ -14,7 +14,7 @@ An imperative action with its object, for example `Pin CI container images by di
 | Motivation | yes | Why the work is needed now: risk, cost, or the work it unblocks. |
 | Scope | yes | **In scope** and **Out of scope** bullet lists. |
 | Acceptance Criteria | yes | `### AC1: <name>` onward, each one observable, verifiable statement. |
-| Definition of Done | yes | Issue-specific `- [ ]` items, then configured common items. |
+| Done Checklist | yes | Issue-specific `- [ ]` items, then the configured team-wide Definition of Done items. |
 
 ## Body
 
@@ -43,7 +43,7 @@ An imperative action with its object, for example `Pin CI container images by di
 
 <observable, verifiable statement>
 
-## Definition of Done
+## Done Checklist
 
 - [ ] <observable, verifiable item>
 ```

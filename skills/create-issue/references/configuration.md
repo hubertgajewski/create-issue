@@ -88,7 +88,7 @@ size_field = "Size"
 | `milestone.policy` | string | `"optional"` | `none`, `optional`, `required` | Whether a milestone is never, optionally, or always assigned. |
 | `milestone.rules[].name` | string | none | a milestone title | Milestone to assign when its rule matches. |
 | `milestone.rules[].when` | string | none | nonempty prose | The kind of work that belongs in the named milestone. |
-| `definition_of_done.common` | string array | `[]` | nonempty strings | Items appended to every Definition of Done that has one. |
+| `definition_of_done.common` | string array | `[]` | nonempty strings | The team-wide Definition of Done, whose items are appended to every Done Checklist the selected template has. |
 | `estimation.target` | string | `"none"` | `none`, `github-project`, `gitlab-weight` | Where estimates are written, if anywhere. |
 | `estimation.scale` | integer array | `[1, 2, 3, 5, 8]` | strictly increasing positive integers | Ordinary estimate values. |
 | `estimation.warn_at` | integer | `13` | greater than every `scale` value | Estimate allowed only after a split warning and explicit confirmation. |

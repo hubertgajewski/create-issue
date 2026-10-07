@@ -27,7 +27,7 @@ Match a template to a type by its file stem or declared name, case-insensitively
 
 Use a template the user names explicitly even when its name matches no type. When two templates match one type, ask which to use. When none matches, use the built-in template.
 
-A native template fixes the section structure and order. The rules in `SKILL.md` for titles, acceptance criteria, Definition of Done, content, and quality still apply to the text inside those sections. Labels and a title prefix declared by a template count as configured values for that type under the label policy.
+A native template fixes the section structure and order. The rules in `SKILL.md` for titles, acceptance criteria, the Done Checklist, content, and quality still apply to the text inside those sections, including a template's own checklist section whatever its heading. Labels and a title prefix declared by a template count as configured values for that type under the label policy.
 
 ## GitHub
 

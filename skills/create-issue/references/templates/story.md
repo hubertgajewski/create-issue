@@ -17,7 +17,7 @@ An imperative outcome, for example `Export monthly report as CSV`. Name the outc
 | Acceptance Criteria | yes | `### AC1: <name>` onward, each a bulleted Given/When/Then scenario; at least one failure or edge case. |
 | Technical Notes | no | Non-binding implementation ideas, starting with the line `Non-binding.` |
 | Dependencies | no | Parent epic, blocking and blocked issues, related issues, each as an issue link. |
-| Definition of Done | yes | Issue-specific `- [ ]` items, then configured common items. |
+| Done Checklist | yes | Issue-specific `- [ ]` items, then the configured team-wide Definition of Done items. |
 
 ## Body
 
@@ -68,7 +68,7 @@ Non-binding.
 
 - <relationship>: <issue link>
 
-## Definition of Done
+## Done Checklist
 
 - [ ] <observable, verifiable item>
 ```

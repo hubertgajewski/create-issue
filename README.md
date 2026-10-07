@@ -20,7 +20,7 @@ optional `.create-issue.toml`, and it asks when the evidence is ambiguous.
   the rules of a run.
 - Classifies the request as a story, bug, task, or epic and drafts it from a native issue
   template or the matching built-in template, with numbered acceptance criteria and a
-  Definition of Done.
+  Done Checklist that includes your team's Definition of Done when one is configured.
 - Searches open and closed issues for duplicates before drafting.
 - Proposes labels, a milestone, an estimate or epic size, and project-board fields, and
   checks a parent issue you name, using read-only tracker queries.
